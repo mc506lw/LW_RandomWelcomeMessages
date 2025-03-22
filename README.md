@@ -1,142 +1,161 @@
-## [LW]随机欢迎消息 - 智能多源欢迎|节日特效|高度自定义
+### 插件简介
 
-[![GitHub release](https://img.shields.io/github/v/release/mc506lw/LW_RandomWelcomeMessages?style=flat-square)](https://github.com/mc506lw/LW_RandomWelcomeMessages)
+为服务器提供动态欢迎解决方案，集成多平台API与本地化内容，支持节日自动响应与交互反馈。
 
-![Spigot Version](https://img.shields.io/badge/Spigot-1.12.2%2B-brightgreen?style=flat-square)
+### 核心功能
 
-![Downloads](https://img.shields.io/github/downloads/YourName/LW_RandomWelcomeMessage/total?style=flat-square)
+#### 混合消息源
 
-\## ✨ 插件特色
+实时调用诗词API/一言API
+本地消息库自动降级机制
+权重控制系统（自定义触发概率）
 
-\- **智能消息池**：混合本地/API消息源，支持权重分配
+#### 节日响应系统
 
-\- 🎉 **节日模式**：自动识别传统节日触发专属诗词
+预设传统节日触发模板
+支持自定义日期格式（MM-DD）
+专属诗词内容展示
 
-\- 🎶 **沉浸式体验**：支持动作栏显示与自定义音效
+#### 交互优化
 
-\- 📊 **高度可配置**：七大类配置项，自由掌控每个细节
+可配置音效反馈（默认ENTITY_PLAYER_LEVELUP）
+动作栏/聊天框双显示模式
+线程安全设计
 
-\- 🔄 **热重载支持**：修改配置无需重启服务器
+### 技术参数
 
-\## 📥 快速开始
+适配版本：1.21.x（可以试试看）
+存储方式：本地化配置
+网络请求：3000ms超时熔断
+资源占用：轻量化设计（＜2MB内存）
 
-1. 将插件放入 `plugins/` 文件夹
-2. 重启服务器生成配置文件
-3. 按需修改 `config.yml`
-4. 使用 `/lw reload` 应用配置
+### 配置示例
 
-\## 🎯 核心功能
+```Yaml
+# LW_RandomWelcomeMessage
+# 这是配置文件，请在此配置插件的各项功能。
+# 可以加入QQ群：645921477，一起交流学习！
 
-\### 🌈 智能消息系统
 
-\```yaml
+# 消息系统配置
+messages:
+  # ==============================
+  # 消息配置
+  # ------------------------------
+  # 配置格式
+  # 权重:消息内容
+  # 权重小于等于0时不显示消息
+  # 权重可为任意数，但建议不要超过100
+  # 可用变量（需启用对应消息源）：
+  # {player}    - 触发事件的玩家名称
+  # {hitokoto}  - 一言服务返回内容（未启用时回退本地消息）
+  # {shici}     - 诗词服务返回内容（未启用时回退本地消息）
+  # {shici_[type]}  - [type]为诗词类型（例：shici_shuqing，需在诗词服务配置中设定,未启用时回退本地消息，无分类时显示为全部诗词）
+  # {random}    - 随机选择内容（根据权重分配）
+  # ==============================
+  mixed-format:
+    - "40:“{shici}” 欢迎{player}进入服务器！"
+    - "30:“{hitokoto}” 欢迎{player}进入服务器！" # 启用一言服务
+    - "30:{shici}" # 仅启用诗词服务
+    - "90:欢迎{player}进入服务器！" # 仅启用本地消息
 
-\# 示例配置
+  # 随机选择权重
+  random-weight:
+    shici: 50
+    hitokoto: 50
 
-mixed-format:
+  # =========================
+  # ========================
+  # 一言服务配置
+  # ========================
+  hitokoto:
+    api-url: "https://v1.hitokoto.cn/"  # API端点地址
+    timeout: 3000  # 请求超时时间（单位：毫秒）
 
- \- "40:“{shici}” 欢迎{player}进入服务器！"  # 40%概率显示诗词欢迎
+  # ==============================
+  # 诗词服务配置
+  # ------------------------------
+  # 分类接口地址（参考文档：https://v1.jinrishici.com/）
+  # ==============================
+  shici:
+    all: "https://v1.jinrishici.com/all"
+    timeout: 3000  # 请求超时时间（单位：毫秒）
+    # 分类接口地址
+    categories:
+      shuqing: "https://v1.jinrishici.com/shuqing"
 
- \- "30:“{hitokoto}” 欢迎{player}进入服务器！" # 30%概率一言语录
+# =============================
 
- \- "30:{shici}" # 30%概率纯诗词
-
- \- "90:欢迎{player}进入服务器！" # 保底本地消息
-
-\```
-
-\### 🎁 节日模式（自动激活）
-
-\```yaml
-
+# ==============================
+# 节日模式配置
+# ------------------------------
+# 日期格式：MM-DD:节日名称:诗词类型
+# 启用后优先使用节日专属消息模板
+# ==============================
 festival:
+  enable: true  # 启用节日模式
 
- dates:
+  # 节日消息模板（变量说明）：
+  # {jieri_shici} - 节日专属诗词内容
+  # {festival_name} - 节日显示名称
+  mixed-format:
+    - "“{jieri_shici}” {festival_name}快乐！"
 
-  \- "04-05:清明节:jieri/qingmingjie" # 清明节专属诗词
+  # 节日日期映射表
+  dates:
+    - "04-05:清明节:jieri/qingmingjie"  # 清明节配置
+    - "01-22:春节:jieri/chunjie"       # 春节配置
 
-  \- "01-22:春节:jieri/chunjie" 
-
-\```
-
-\### 🔊 沉浸式音效
-
-\```yaml
-
+# ==============================
+# 音效配置
+# ------------------------------
+# 支持 Minecraft 原版音效类型：
+# https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+# ==============================
 sound:
+  enable: true                   # 启用音效
+  type: ENTITY_PLAYER_LEVELUP    # 音效类型
+  volume: 1.0                    # 音量（0.0-1.0）
+  pitch: 1.0                     # 音调（0.5-2.0）
 
- type: ENTITY_PLAYER_LEVELUP # 升级音效
-
- volume: 1.0 # 100%音量
-
-\```
-
-\## 📄 配置详解
-
-\### 📌 消息源配置
-
-| 参数    | 说明          | 默认值           |
-
-|------------|---------------------|-------------------------|
-
-| api-url   | API端点地址       | https://v1.hitokoto.cn/ |
-
-| timeout   | 请求超时(ms)      | 3000          |
-
-\### 🎨 显示设置
-
-\```yaml
-
+# ==============================
+# 显示设置
+# ==============================
 settings:
+  use-actionbar: true  # 使用动作栏显示消息（禁用时在聊天框显示）
 
- use-actionbar: true # 在动作栏显示消息
+# ==============================
+# 命令反馈消息配置
+# ==============================
+command-messages:
+  no-permission: "&c⚠ 权限不足！"
+  test-success: "&a✅ 测试成功！消息内容：&r{message}"
+  test-failed: "&c❌ API请求失败，请检查控制台日志"
+  reload-message: "&a[成功] &e配置已热重载！"
+```
 
-\```
+### 管理命令
 
-\## ⚙ 命令与权限
+/rwm reload - 热重载配置
+/rwm test - 消息模板测试
+/rwm debug - 显示API状态
 
-| 命令        | 权限节点           | 功能说明     |
+### 权限节点
 
-|-------------------|----------------------------|----------------|
+rwm.receive - 接收欢迎消息
+rwm.admin - 配置管理权限
 
-| /lw reload    | lw.randomwelcomemessage.admin | 热重载配置    |
+### 获取支持
 
-| /lw test     | lw.randomwelcomemessage.admin | 测试消息系统   |
+GitHub仓库：https://github.com/mc506lw/LW_RandomWelcomeMessages
+技术交流：QQ群 645921477
 
-\## 🖼 效果截图
+### 运行要求
 
-![欢迎示例](https://via.placeholder.com/800x400?text=欢迎消息展示效果)
+Java 16+ 运行环境
+不要更改本地时间!
 
-*图示：包含动作栏消息与聊天框显示的双重效果*
+### 感谢列表
 
-\## 📦 下载地址
-
-[![下载按钮](https://img.shields.io/badge/立即下载-v1.0-blue?style=for-the-badge&logo=github)](https://github.com/YourName/LW_RandomWelcomeMessage/releases/latest)
-
-\## ❓ 常见问题
-
-Q: API请求失败如何处理？  
-
-A: 检查网络连接 → 确认API地址有效性 → 适当增加timeout值
-
-Q: 如何添加自定义节日？  
-
-A: 在 `festival.dates` 按 `MM-DD:节日名称:分类` 格式添加
-
-\## 💬 支持与交流
-
-QQ群：`645921477`  
-
-[点击加入讨论](https://qm.qq.com/q/rUwWnGvnyN)
-
-\---
-
-**更新日志**  
-
-`v1.0` 初始发布  
-
-\- 实现多源消息系统  
-
-\- 支持节日模式与音效  
-
-\- 完成基础配置框架
+[一言网（hitokoto.cn）](https://hitokoto.cn/)
+[gushi.ci](http://gushi.ci/)
