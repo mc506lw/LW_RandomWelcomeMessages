@@ -1,0 +1,60 @@
+# ==============================
+# 命令反馈消息配置
+# ==============================
+command-messages:
+  no-permission: "&c⚠ 权限不足！"
+  test-success: "&a✅ 测试成功！消息内容：&r{message}"
+  reload-message: "&a[成功] &e配置已热重载！"
+  unknown-command: "&c未知命令，使用 /rwm 查看帮助"
+  help-lines:
+    - "&6==== &eLW-RandomWelcomeMessages &6===="
+    - "&e/rwm reload &7- 重载配置文件"
+    - "&e/rwm send &7- 向自己发送测试消息"
+
+# ==============================
+# 节日消息配置
+# ==============================
+festival-messages:
+  default-template: "&a“{jieri_shici}” &e{festival_name}快乐！"
+  templates:
+    - "&a“{jieri_shici}” &e{festival_name}快乐！"
+    - "&e{festival_name}特别问候：&6{message}"
+
+# ==============================
+# API相关消息
+# ==============================
+api-messages:
+  hitokoto-failure: "&7今日寄语加载中..."
+  shici-failure: "&7暂未找到合适诗句"
+  error-template: "&c{api} 请求失败: {error}"
+  parse-error: "&cAPI响应解析失败"
+  timeout: "&cAPI请求超时"
+
+# ==============================
+# 系统消息
+# ==============================
+system-messages:
+  startup-messages:
+    - "&6===== LW-RandomWelcomeMessages ====="
+    - "&e作者: &6mc506lw"
+    - "&e交流群: &6645921477"
+    - "&a插件已成功加载！"
+  shutdown: "&c随机欢迎消息插件已卸载！"
+  default-welcome: "欢迎加入！"
+  random-content-failure: "随机内容未配置"
+  actionbar-not-supported: "动作栏功能需要 1.9+ 版本支持"
+
+# ==============================
+# 音效相关消息
+# ==============================
+sound-messages:
+  play-sound: "&e播放音效: &6{sound}"
+  disabled: "&c音效功能已禁用"
+
+# ==============================
+# 调试消息
+# ==============================
+debug-messages:
+  config-load: "&e[DEBUG] 开始加载配置文件..."
+  shici-request: "&e[DEBUG] 请求诗词API {url}"
+  player-join: "&e[DEBUG] 处理玩家加入: {player}"

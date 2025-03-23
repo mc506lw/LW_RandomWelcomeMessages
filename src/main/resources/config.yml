@@ -1,7 +1,7 @@
 # LW_RandomWelcomeMessage
 # 这是配置文件，请在此配置插件的各项功能。
 # 可以加入QQ群：645921477，一起交流学习！
-
+debug: false  # 调试模式
 
 # 消息系统配置
 messages:
@@ -89,12 +89,3 @@ sound:
 # ==============================
 settings:
   use-actionbar: true  # 使用动作栏显示消息（禁用时在聊天框显示）
-
-# ==============================
-# 命令反馈消息配置
-# ==============================
-command-messages:
-  no-permission: "&c⚠ 权限不足！"
-  test-success: "&a✅ 测试成功！消息内容：&r{message}"
-  test-failed: "&c❌ API请求失败，请检查控制台日志"
-  reload-message: "&a[成功] &e配置已热重载！"

@@ -32,6 +32,8 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
 
     private final Random random = new Random();
     private FileConfiguration config;
+    private Messages messages;
+    private boolean debugMode;
 
     // 配置字段
     private List<MessageEntry> messageEntries;
@@ -46,6 +48,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        this.messages = new Messages(this);
         loadConfig();
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -54,16 +57,24 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
     }
 
     private void printStartupMessage() {
-        getLogger().info("===== LW-RandomWelcomeMessages =====");
-        getLogger().info("作者: mc506lw");
-        getLogger().info("QQ交流群: 645921477");
-        getLogger().info("随机欢迎消息插件已加载！");
+        messages.getList(Messages.SYSTEM + ".startup-messages", Arrays.asList(
+                "===== LW-RandomWelcomeMessages =====",
+                "作者: {author}",
+                "QQ交流群: {qq-group}",
+                "随机欢迎消息插件已加载！"
+        )).forEach(line -> {
+            String formatted = messages.getWithPlaceholders(line, line,
+                    new Messages.Pair("{author}", "mc506lw"),
+                    new Messages.Pair("{qq-group}", "645921477"));
+            getLogger().info(formatted);
+        });
     }
 
     private void loadConfig() {
         try {
             reloadConfig();
             config = getConfig();
+            this.debugMode = config.getBoolean("debug", false);
 
             // 加载消息条目
             messageEntries = new ArrayList<>();
@@ -176,7 +187,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                 return processTemplate(player, entry.getTemplate());
             }
         }
-        return "欢迎加入！";
+        return messages.get("system-messages.default-welcome", "欢迎加入！");
     }
 
     private String handleFestivalMessage(Player player) {
@@ -185,15 +196,20 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
         if (festivalInfo != null) {
             String poem = fetchShici(festivalInfo[2]); // 第三个参数是诗词类型
             if (poem != null) {
-                List<String> festivalTemplates = config.getStringList("festival.mixed-format");
+                List<String> festivalTemplates = messages.getFestivalTemplates();
                 if (festivalTemplates.isEmpty()) {
-                    return colorize("&a“" + poem + "” &e" + festivalInfo[1] + "快乐！");
+                    return messages.getWithPlaceholders(
+                            Messages.FESTIVAL + ".default-template",
+                            "&a“{jieri_shici}” &e{festival_name}快乐！",
+                            new Messages.Pair("{jieri_shici}", poem),
+                            new Messages.Pair("{festival_name}", festivalInfo[1])
+                    );
                 }
                 String template = festivalTemplates.get(random.nextInt(festivalTemplates.size()));
-                return colorize(
-                        template.replace("{jieri_shici}", poem)
-                                .replace("{festival_name}", festivalInfo[1])
-                                .replace("{player}", player.getName())
+                return messages.getWithPlaceholders(template,template,
+                        new Messages.Pair("{jieri_shici}", poem),
+                        new Messages.Pair("{festival_name}", festivalInfo[1]),
+                        new Messages.Pair("{player}", player.getName())
                 );
             }
         }
@@ -242,18 +258,18 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                     return json.getString("hitokoto");
                 } else {
                     getLogger().warning("一言API返回格式错误: " + response);
-                    return "一言获取失败";
+                    return messages.get("api-messages.hitokoto-failure", "一言获取失败");
                 }
             }
         } catch (Exception e) {
-            getLogger().warning("一言API请求失败: " + e.getMessage());
-            return "今日寄语加载中...";
+            getLogger().warning(messages.getApiError("一言API", e.getMessage()));
+            return messages.get("api-messages.hitokoto-failure", "今日寄语加载中...");
         }
     }
 
     private String fetchShici(String category) {
         String url = shiciCategories.getOrDefault(category, shiciCategories.get("all"));
-        if (url == null) return "诗词服务未配置";
+        if (url == null) return messages.get("api-messages.shici-failure", "诗词服务未配置");
 
         try {
             HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
@@ -277,12 +293,12 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                     return json.getString("content");
                 } else {
                     getLogger().warning("诗词API返回格式错误: " + response);
-                    return "诗词解析失败";
+                    return messages.get("api-messages.shici-failure", "诗词解析失败");
                 }
             }
         } catch (Exception e) {
-            getLogger().warning("诗词API请求失败: " + e.getMessage());
-            return "暂未找到合适诗句";
+            getLogger().warning(messages.getApiError("诗词API", e.getMessage()));
+            return messages.get("api-messages.shici-failure", "暂未找到合适诗句");
         }
     }
 
@@ -290,7 +306,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
         // 加载随机权重配置
         ConfigurationSection randomWeightSection = config.getConfigurationSection("messages.random-weight");
         if (randomWeightSection == null) {
-            return "随机内容未配置";
+            return messages.get("system-messages.random-content-failure", "随机内容未配置");
         }
 
         int shiciWeight = randomWeightSection.getInt("shici", 50);
@@ -307,7 +323,12 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
     }
 
     private void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+        try {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message)));
+        } catch (NoSuchMethodError e) {
+            // 旧版本的逻辑（如 1.8）
+            getLogger().warning(messages.get("system-messages.actionbar-not-supported", "动作栏功能需要 1.9+ 版本支持"));
+        }
     }
 
     private String colorize(String text) {
@@ -327,7 +348,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
             case "reload":
                 if (!hasPermission(sender, "rwm.reload")) return true;
                 loadConfig();
-                sender.sendMessage(colorize(config.getString("command-messages.reload-message")));
+                sender.sendMessage(messages.get("command-messages.reload-message", "&a配置重载成功"));
                 break;
             case "send":
                 if (!hasPermission(sender, "rwm.send")) return true;
@@ -336,26 +357,28 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                 }
                 break;
             default:
-                sender.sendMessage(colorize("&c未知命令，使用 /rwm 查看帮助"));
+                sender.sendMessage(messages.get("command-messages.unknown-command", "&c未知命令，使用 /rwm 查看帮助"));
         }
         return true;
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(colorize("&6==== &eLW-RandomWelcomeMessages &6===="));
-        sender.sendMessage(colorize("&e/rwm reload &7- 重载配置文件"));
-        sender.sendMessage(colorize("&e/rwm send &7- 向自己发送测试消息"));
+        messages.getList("command-messages.help-lines", Arrays.asList(
+                "&6==== &eLW-RandomWelcomeMessages &6====",
+                "&e/rwm reload &7- 重载配置文件",
+                "&e/rwm send &7- 向自己发送测试消息"
+        )).forEach(sender::sendMessage);
     }
 
     private boolean hasPermission(CommandSender sender, String permission) {
         if (sender.hasPermission(permission)) return true;
-        sender.sendMessage(colorize(config.getString("command-messages.no-permission", "&c⚠ 权限不足！")));
+        sender.sendMessage(messages.get("command-messages.no-permission", "&c⚠ 权限不足！"));
         return false;
     }
 
     @Override
     public void onDisable() {
-        getLogger().info(ChatColor.RED + "随机欢迎消息插件已卸载！");
+        getLogger().info(messages.get("system-messages.shutdown", "&c随机欢迎消息插件已卸载！"));
     }
 }
 
