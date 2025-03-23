@@ -1,6 +1,6 @@
 name: LW_RandomWelcomeMessages
 main: top.mistmc.lite.LW_RandomWelcomeMessages
-version: 1.0
+version: 1.0.2
 api-version: '1.13'
 description: A plugin that sends random welcome messages to players when they join the server.
 commands:
@@ -9,6 +9,7 @@ commands:
     usage: |
       /rwm reload - 重载配置
       /rwm send - 发送随机欢迎消息
+      /rwm test MM DD - 测试节日命令是否正常，需要包含参数 MM-DD
 permissions:
   rwm.reload:
     description: 重载插件配置

@@ -10,9 +10,10 @@ command-messages:
     - "&6==== &eLW-RandomWelcomeMessages &6===="
     - "&e/rwm reload &7- 重载配置文件"
     - "&e/rwm send &7- 向自己发送测试消息"
+    - "&e/rwm test MM DD&7- 测试节日命令是否正常，需要包含参数 MM-DD"
 
 # ==============================
-# 节日消息配置
+# 节日消息配置（没做好）
 # ==============================
 festival-messages:
   default-template: "&a“{jieri_shici}” &e{festival_name}快乐！"
@@ -35,11 +36,11 @@ api-messages:
 # ==============================
 system-messages:
   startup-messages:
-    - "&6===== LW-RandomWelcomeMessages ====="
-    - "&e作者: &6mc506lw"
-    - "&e交流群: &6645921477"
-    - "&a插件已成功加载！"
-  shutdown: "&c随机欢迎消息插件已卸载！"
+    - "===== LW-RandomWelcomeMessages ====="
+    - "作者: &6mc506lw"
+    - "交流群: &6645921477"
+    - "老万的随机欢迎消息插件已成功加载！"
+  shutdown: "老万的随机欢迎消息插件已卸载！"
   default-welcome: "欢迎加入！"
   random-content-failure: "随机内容未配置"
   actionbar-not-supported: "动作栏功能需要 1.9+ 版本支持"

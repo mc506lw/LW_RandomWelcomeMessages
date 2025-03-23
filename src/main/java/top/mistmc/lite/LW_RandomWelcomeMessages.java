@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -61,7 +62,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                 "===== LW-RandomWelcomeMessages =====",
                 "作者: {author}",
                 "QQ交流群: {qq-group}",
-                "随机欢迎消息插件已加载！"
+                "老万的随机欢迎消息插件已加载！"
         )).forEach(line -> {
             String formatted = messages.getWithPlaceholders(line, line,
                     new Messages.Pair("{author}", "mc506lw"),
@@ -142,7 +143,9 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
 
         } catch (InvalidConfigurationException e) {
             getLogger().severe("配置文件错误: " + e.getMessage());
-            Bukkit.getPluginManager().disablePlugin(this);
+            // 重新生成默认配置文件
+            saveDefaultConfig();
+            getLogger().warning("已生成默认配置文件！");
         }
     }
 
@@ -356,6 +359,65 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
                     onPlayerJoin(new PlayerJoinEvent((Player) sender, "测试消息"));
                 }
                 break;
+            case "test":
+                if (!hasPermission(sender, "rwm.test")) return true;
+                if (args.length == 3) {
+                    if (sender instanceof Player) {
+                        try {
+                            // 使用MonthDay解析不含年份的日期
+                            MonthDay monthDay = MonthDay.parse(
+                                    args[1] + "-" + args[2],
+                                    DateTimeFormatter.ofPattern("MM-dd")
+                            );
+                            // 替换原有解析方式为：
+                            LocalDate date = LocalDate.of(2020, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+
+
+                // 获取节日信息
+                String[] festivalInfo = festivalDates.get(date);
+                if (festivalInfo != null) {
+                    // 获取诗词内容
+                    String poem = fetchShici(festivalInfo[1]); // 修改第三个参数为正确的索引
+
+                    if (poem != null) {
+                        // 获取节日模板
+                        List<String> festivalTemplates = messages.getFestivalTemplates();
+                        String festivalMessage;
+                        if (festivalTemplates.isEmpty()) {
+                            // 使用默认模板
+                            festivalMessage = messages.getWithPlaceholders(
+                                    Messages.FESTIVAL + ".default-template",
+                                    "&a“{jieri_shici}” &e{festival_name}快乐！",
+                                    new Messages.Pair("{jieri_shici}", poem),
+                                    new Messages.Pair("{festival_name}", festivalInfo[1])
+                            );
+                        } else {
+                            // 随机选择一个模板
+                            String template = festivalTemplates.get(random.nextInt(festivalTemplates.size()));
+                            festivalMessage = messages.getWithPlaceholders(template, template,
+                                    new Messages.Pair("{jieri_shici}", poem),
+                                    new Messages.Pair("{festival_name}", festivalInfo[1]),
+                                    new Messages.Pair("{player}", ((Player) sender).getName())
+                            );
+                        }
+                        // 发送节日消息
+                        sender.sendMessage(colorize(festivalMessage));
+                    } else {
+                        sender.sendMessage(messages.get("command-messages.festival-not-found", "&c未找到该节日信息"));
+                    }
+                } else {
+                    sender.sendMessage(messages.get("command-messages.festival-not-found", "&c未找到该节日信息"));
+                }
+            } catch (Exception e) {
+                getLogger().warning(messages.get("command-messages.festival-parse-failure", "&4error: " + e.getMessage()));
+                sender.sendMessage(messages.get("command-messages.festival-parse-failure", "&c节日日期解析失败"));
+            }
+        } else {
+            sender.sendMessage(messages.get("command-messages.festival-missing-args", "&c缺少参数，请使用 /rwm test MM DD"));
+        }
+    }
+    break;
+
             default:
                 sender.sendMessage(messages.get("command-messages.unknown-command", "&c未知命令，使用 /rwm 查看帮助"));
         }
@@ -366,7 +428,8 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
         messages.getList("command-messages.help-lines", Arrays.asList(
                 "&6==== &eLW-RandomWelcomeMessages &6====",
                 "&e/rwm reload &7- 重载配置文件",
-                "&e/rwm send &7- 向自己发送测试消息"
+                "&e/rwm send &7- 向自己发送测试消息",
+                "&e/rwm test MM DD&7- 测试节日命令是否正常，需要包含参数 MM-DD"
         )).forEach(sender::sendMessage);
     }
 
@@ -378,7 +441,7 @@ public class LW_RandomWelcomeMessages extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        getLogger().info(messages.get("system-messages.shutdown", "&c随机欢迎消息插件已卸载！"));
+        getLogger().info(messages.get("system-messages.shutdown", "老万的随机欢迎消息插件已卸载！"));
     }
 }
 
